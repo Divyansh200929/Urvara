@@ -1,0 +1,1743 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ARDUINO UNO - 5-IN-1 SOIL TELEMETRY SYSTEM v2.95</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Classic Windows 95 / 1990s Industrial Telemetry Styling */
+        :root {
+            --win-bg: #C0C0C0;
+            --win-light: #FFFFFF;
+            --win-mid-light: #DFDFDF;
+            --win-shadow: #808080;
+            --win-dark: #000000;
+            --win-navy: #000080;
+            --win-teal: #008080;
+            --crt-bg: #001100;
+            --crt-green: #00FF00;
+            --crt-amber: #FFB000;
+        }
+
+        body {
+            background-color: var(--win-bg);
+            font-family: 'MS Sans Serif', Tahoma, Geneva, Verdana, sans-serif;
+            color: #000000;
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            min-height: 100vh;
+            overflow-x: hidden;
+            user-select: none;
+            -webkit-font-smoothing: none;
+        }
+
+        .font-mono-retro {
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        /* Win95 3D Beveled Borders */
+        .win-outset {
+            background-color: var(--win-bg);
+            border-top: 2px solid var(--win-light);
+            border-left: 2px solid var(--win-light);
+            border-right: 2px solid var(--win-dark);
+            border-bottom: 2px solid var(--win-dark);
+            box-shadow: inset -1px -1px 0px var(--win-shadow), inset 1px 1px 0px var(--win-mid-light);
+        }
+
+        .win-inset {
+            background-color: #FFFFFF;
+            border-top: 2px solid var(--win-shadow);
+            border-left: 2px solid var(--win-shadow);
+            border-right: 2px solid var(--win-light);
+            border-bottom: 2px solid var(--win-light);
+            box-shadow: inset 1px 1px 0px var(--win-dark);
+        }
+
+        .win-inset-gray {
+            background-color: var(--win-bg);
+            border-top: 2px solid var(--win-shadow);
+            border-left: 2px solid var(--win-shadow);
+            border-right: 2px solid var(--win-light);
+            border-bottom: 2px solid var(--win-light);
+            box-shadow: inset 1px 1px 0px var(--win-dark);
+        }
+
+        /* Win95 Title Bar */
+        .win-titlebar {
+            background: linear-gradient(90deg, #000080 0%, #1084d0 100%);
+            color: #FFFFFF;
+            font-weight: bold;
+            padding: 3px 6px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            letter-spacing: 0.3px;
+        }
+
+        .win-titlebar-inactive {
+            background: #808080;
+            color: #C0C0C0;
+        }
+
+        /* Win95 Push Buttons */
+        .win-btn {
+            background-color: var(--win-bg);
+            border-top: 2px solid var(--win-light);
+            border-left: 2px solid var(--win-light);
+            border-right: 2px solid var(--win-dark);
+            border-bottom: 2px solid var(--win-dark);
+            box-shadow: inset -1px -1px 0px var(--win-shadow);
+            padding: 4px 10px;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            color: #000000;
+            min-height: 28px;
+        }
+
+        .win-btn:active, .win-btn.active {
+            border-top: 2px solid var(--win-dark);
+            border-left: 2px solid var(--win-dark);
+            border-right: 2px solid var(--win-light);
+            border-bottom: 2px solid var(--win-light);
+            box-shadow: inset 1px 1px 0px var(--win-shadow);
+            padding: 5px 9px 3px 11px;
+        }
+
+        .win-btn-sm {
+            width: 18px;
+            height: 16px;
+            padding: 0;
+            min-height: 16px;
+            font-size: 10px;
+            line-height: 1;
+        }
+
+        /* Win95 GroupBox */
+        .win-groupbox {
+            border: 1px solid var(--win-shadow);
+            box-shadow: 1px 1px 0px var(--win-light), inset 1px 1px 0px var(--win-light);
+            padding: 12px 10px 10px 10px;
+            position: relative;
+            margin-top: 8px;
+        }
+
+        .win-groupbox-title {
+            position: absolute;
+            top: -9px;
+            left: 10px;
+            background-color: var(--win-bg);
+            padding: 0 5px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        /* CRT Screen & Scanlines */
+        .crt-screen {
+            background-color: var(--crt-bg);
+            color: var(--crt-green);
+            font-family: 'Courier New', Courier, monospace;
+            position: relative;
+            overflow: hidden;
+            text-shadow: 0 0 4px rgba(0, 255, 0, 0.6);
+        }
+
+        .crt-screen::after {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.35) 50%);
+            background-size: 100% 3px;
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        .amber-mode {
+            color: var(--crt-amber) !important;
+            text-shadow: 0 0 4px rgba(255, 176, 0, 0.6) !important;
+        }
+
+        /* Classic 90s Blink */
+        @keyframes retro-blink {
+            0%, 49% { opacity: 1; }
+            50%, 100% { opacity: 0; }
+        }
+        .blink-90s {
+            animation: retro-blink 1s infinite;
+        }
+
+        /* Segmented LED Meter */
+        .led-segment {
+            height: 9px;
+            width: 100%;
+            background-color: #1a241a;
+            border: 1px solid #000000;
+            margin-bottom: 2px;
+            transition: background-color 0.1s;
+        }
+        .led-green.on { background-color: #00FF00; box-shadow: 0 0 5px #00FF00; }
+        .led-yellow.on { background-color: #FFFF00; box-shadow: 0 0 5px #FFFF00; }
+        .led-red.on { background-color: #FF2200; box-shadow: 0 0 5px #FF2200; }
+        .led-cyan.on { background-color: #00FFFF; box-shadow: 0 0 5px #00FFFF; }
+
+        /* Custom Scrollbar Win95 */
+        ::-webkit-scrollbar {
+            width: 16px;
+            height: 16px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #DFDFDF;
+            border-left: 1px solid #808080;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #C0C0C0;
+            border-top: 2px solid #FFFFFF;
+            border-left: 2px solid #FFFFFF;
+            border-right: 2px solid #000000;
+            border-bottom: 2px solid #000000;
+        }
+
+        /* Select & Radio Styling */
+        select.win-select {
+            background-color: #FFFFFF;
+            border-top: 2px solid var(--win-shadow);
+            border-left: 2px solid var(--win-shadow);
+            border-right: 2px solid var(--win-light);
+            border-bottom: 2px solid var(--win-light);
+            padding: 3px 6px;
+            font-size: 12px;
+            font-family: 'MS Sans Serif', Tahoma, sans-serif;
+            outline: none;
+        }
+
+        /* Retro Tabs */
+        .win-tab {
+            background: #C0C0C0;
+            border-top: 2px solid #FFFFFF;
+            border-left: 2px solid #FFFFFF;
+            border-right: 2px solid #000000;
+            padding: 4px 12px;
+            font-size: 12px;
+            cursor: pointer;
+            margin-right: 2px;
+            position: relative;
+            top: 2px;
+        }
+        .win-tab.active {
+            font-weight: bold;
+            padding-bottom: 6px;
+            top: 0px;
+            z-index: 5;
+        }
+    </style>
+</head>
+<body class="min-h-screen w-screen m-0 p-0 flex flex-col">
+
+    <!-- Main Fullscreen 1995 Container -->
+    <div id="main-window" class="win-outset w-full min-h-screen flex flex-col justify-between">
+        
+        <div>
+        <!-- Window Title Bar -->
+        <div class="win-titlebar text-xs sm:text-sm">
+            <div class="flex items-center gap-2 truncate">
+                <!-- Retro Pixel Chip Icon -->
+                <svg width="16" height="16" viewBox="0 0 16 16" class="shrink-0">
+                    <rect x="3" y="3" width="10" height="10" fill="#008080" stroke="#FFFFFF" stroke-width="1"/>
+                    <rect x="5" y="5" width="6" height="6" fill="#000000"/>
+                    <rect x="6" y="6" width="2" height="2" fill="#00FF00"/>
+                    <path d="M1 5h2M1 8h2M1 11h2M13 5h2M13 8h2M13 11h2M5 1v2M8 1v2M11 1v2M5 13v2M8 13v2M11 13v2" stroke="#FFFF00" stroke-width="1"/>
+                </svg>
+                <span class="truncate">ARDUINO UNO - 5-IN-1 NPK + pH + MOISTURE TELEMETRY v2.95 [COM3: 9600 BAUD]</span>
+            </div>
+        </div>
+
+        <!-- Classic Menu Bar -->
+        <div class="bg-[#C0C0C0] border-b border-[#808080] px-2 py-1 flex flex-wrap items-center justify-between text-xs gap-2">
+            <div class="flex items-center gap-4">
+                <span class="cursor-pointer hover:bg-[#000080] hover:text-white px-1" onclick="exportCSV()"><u>F</u>ile</span>
+                <span class="cursor-pointer hover:bg-[#000080] hover:text-white px-1" onclick="toggleCRTColor()"><u>V</u>iew (CRT Phosphor)</span>
+                <span class="cursor-pointer hover:bg-[#000080] hover:text-white px-1" onclick="switchTab('wiring')"><u>H</u>ardware Wiring</span>
+                <span class="cursor-pointer hover:bg-[#000080] hover:text-white px-1" onclick="openAboutModal()"><u>A</u>bout</span>
+            </div>
+            <div class="flex items-center gap-2 font-mono-retro text-[11px]">
+                <span id="demo-mode-badge" class="px-2 py-0.5 bg-[#1A1A1A] text-[#00FF00] border border-[#808080] flex items-center gap-1.5 font-bold">
+                    <span id="demo-led" class="inline-block w-2 h-2 bg-[#00FF00]"></span>
+                    <span id="demo-badge-text">[MANUAL / HARDWARE MODE]</span>
+                </span>
+                <span id="connection-badge" class="px-2 py-0.5 bg-[#001100] text-[#00FF00] border border-[#808080] flex items-center gap-1.5">
+                    <span id="status-led" class="inline-block w-2 h-2 bg-[#00FF00]"></span>
+                    <span id="status-text">COM3: CONNECTED</span>
+                </span>
+            </div>
+        </div>
+
+        <!-- 90s Scrolling Marquee Banner -->
+        <div class="bg-[#000080] text-[#FFFF00] font-mono-retro text-xs py-1 px-2 border-b-2 border-[#FFFFFF] overflow-hidden">
+            <marquee behavior="scroll" direction="left" scrollamount="4">
+                *** AGRI-TRONICS 95 MULTI-PROBE SOIL ANALYZER *** ARDUINO UNO R3 + MAX485 RS-485 MODBUS RTU CONSOLE *** REAL-TIME NITROGEN (N), PHOSPHORUS (P), POTASSIUM (K), SOIL pH &amp; MOISTURE (%) TELEMETRY ***
+            </marquee>
+        </div>
+
+        <!-- Top Control Toolbar -->
+        <div class="p-2.5 bg-[#C0C0C0] border-b border-[#808080] flex flex-wrap items-center justify-between gap-2">
+            <div class="flex flex-wrap items-center gap-2">
+                <button id="btn-demo-mode" onclick="toggleDemoMode()" class="win-btn" style="background-color: #C0C0C0;">
+                    <span id="demo-btn-dot" class="w-2.5 h-2.5 bg-[#808080] border border-black inline-block"></span>
+                    <span id="btn-demo-label">DEMO MODE: OFF</span>
+                </button>
+
+                <button id="btn-connect" onclick="toggleConnection()" class="win-btn">
+                    <svg width="16" height="16" viewBox="0 0 16 16">
+                        <rect x="2" y="5" width="5" height="6" fill="#555" stroke="#000"/>
+                        <rect x="7" y="6" width="3" height="4" fill="#FFD700"/>
+                        <path d="M10 8h4" stroke="#000" stroke-width="2"/>
+                        <circle cx="14" cy="8" r="1.5" fill="#FF0000"/>
+                    </svg>
+                    <span id="btn-connect-label">DISCONNECT UNO</span>
+                </button>
+
+                <button onclick="sampleNow()" class="win-btn">
+                    <svg width="14" height="14" viewBox="0 0 16 16">
+                        <polygon points="9,1 3,9 8,9 7,15 13,7 8,7" fill="#FFCC00" stroke="#000" stroke-width="1"/>
+                    </svg>
+                    <span>SAMPLE NOW</span>
+                </button>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <button onclick="exportCSV()" class="win-btn">
+                    <svg width="16" height="16" viewBox="0 0 16 16">
+                        <rect x="2" y="2" width="12" height="12" fill="#0000AA" stroke="#000"/>
+                        <rect x="4" y="2" width="8" height="5" fill="#CCCCCC"/>
+                        <rect x="8" y="3" width="2" height="3" fill="#0000AA"/>
+                        <rect x="4" y="9" width="8" height="5" fill="#FFFFFF"/>
+                        <line x1="5" y1="11" x2="11" y2="11" stroke="#000" stroke-width="1"/>
+                        <line x1="5" y1="13" x2="9" y2="13" stroke="#000" stroke-width="1"/>
+                    </svg>
+                    <span>SAVE LOG TO FLOPPY (.CSV)</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="px-3 pt-2 bg-[#C0C0C0] flex items-end border-b-2 border-[#FFFFFF]">
+            <div id="tab-dashboard" onclick="switchTab('dashboard')" class="win-tab active flex items-center gap-1.5">
+                <svg width="14" height="14" viewBox="0 0 16 16">
+                    <path d="M8 2C5 6 4 9 4 11a4 4 0 008 0c0-2-1-5-4-9z" fill="#00AA00" stroke="#000"/>
+                </svg>
+                <span>Telemetry Dashboard (5-Probe)</span>
+            </div>
+            <div id="tab-wiring" onclick="switchTab('wiring')" class="win-tab flex items-center gap-1.5">
+                <svg width="14" height="14" viewBox="0 0 16 16">
+                    <rect x="2" y="4" width="12" height="8" fill="#006699" stroke="#000"/>
+                    <rect x="4" y="6" width="3" height="4" fill="#222"/>
+                    <rect x="9" y="6" width="3" height="4" fill="#222"/>
+                </svg>
+                <span>Arduino + MAX485 Wiring Pinout</span>
+            </div>
+        </div>
+
+        <!-- ==================== VIEW 1: TELEMETRY DASHBOARD ==================== -->
+        <div id="view-dashboard" class="p-3 space-y-3 flex-1">
+
+            <!-- LIVE SOIL CONSTITUENT CROP SUITABILITY & RECOMMENDATION ENGINE -->
+            <div class="win-groupbox">
+                <span class="win-groupbox-title">SOIL CONSTITUENT ANALYZER (NPK + pH + MOISTURE) &amp; CROP RECOMMENDATION ENGINE</span>
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-3 pt-1">
+                    
+                    <!-- Left 5 Cols: #1 Best Crop CRT LCD Readout + Target Selector -->
+                    <div class="lg:col-span-5 flex flex-col justify-between gap-2">
+                        <div class="crt-screen win-inset p-2.5 flex flex-col justify-between flex-1">
+                            <div class="flex items-center justify-between text-[10px] border-b border-[#005500] pb-1 mb-1">
+                                <span>BEST SUITED CROP (5-PROBE MATCH)</span>
+                                <span id="best-crop-score" class="font-bold px-1.5 bg-[#003300] border border-[#00FF00]">MATCH: 95%</span>
+                            </div>
+                            <div class="my-1">
+                                <div id="best-crop-name" class="text-xl sm:text-2xl font-bold tracking-wide uppercase">
+                                    RICE / PADDY
+                                </div>
+                                <div id="best-crop-latin" class="text-[11px] opacity-80 italic">
+                                    Oryza sativa • Ideal pH: 5.5-6.8 | Moisture: 65-85%
+                                </div>
+                            </div>
+                            <div id="best-crop-reason" class="text-[11px] leading-snug border-t border-[#005500] pt-1.5 mt-1">
+                                Analyzing N:P:K, pH, and moisture profile...
+                            </div>
+                        </div>
+
+                        <div class="win-inset-gray p-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                            <label for="crop-select" class="text-xs font-bold whitespace-nowrap">Active Gauge Target:</label>
+                            <div class="flex items-center gap-1.5 w-full sm:w-auto flex-1">
+                                <select id="crop-select" onchange="changeCropPreset(true)" class="win-select w-full font-bold text-xs">
+                                    <!-- Populated dynamically by JS -->
+                                </select>
+                                <button id="btn-auto-lock" onclick="toggleAutoTarget()" class="win-btn active py-0.5 px-2 text-[10px] min-h-0 whitespace-nowrap" title="Automatically set gauge thresholds to #1 recommended crop">
+                                    AUTO: ON
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right 7 Cols: Top-4 Ranked Crop Suitability Table + Agronomy Advisory -->
+                    <div class="lg:col-span-7 flex flex-col justify-between gap-2">
+                        <div class="win-inset bg-white p-1.5 overflow-x-auto">
+                            <div class="bg-[#000080] text-white text-[11px] font-bold px-2 py-0.5 flex flex-wrap justify-between items-center mb-1 gap-1">
+                                <span>TOP 4 RECOMMENDED CROPS (CLICK ROW TO INSPECT)</span>
+                                <span id="soil-npk-ratio" class="font-mono-retro text-[#FFFF00]">NPK 95:52:50 | pH 6.4 | H2O 68%</span>
+                            </div>
+                            <table class="w-full border-collapse text-xs">
+                                <thead>
+                                    <tr class="bg-[#C0C0C0] text-[11px] border-b border-black">
+                                        <th class="p-1 text-left border border-[#808080]">Rank / Crop</th>
+                                        <th class="p-1 text-center border border-[#808080]">Match</th>
+                                        <th class="p-1 text-center border border-[#808080]">Ideal N-P-K</th>
+                                        <th class="p-1 text-center border border-[#808080]">pH / Moist</th>
+                                        <th class="p-1 text-center border border-[#808080]">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="crop-ranking-body" class="font-mono-retro text-[11px]">
+                                    <!-- Populated dynamically by evaluateCropSuitability() -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Soil Amendment / Fertilizer & Irrigation Advisory Box -->
+                        <div id="agronomy-alert" class="win-inset bg-[#FFFFE1] p-2 flex items-start gap-2 text-xs">
+                            <svg id="alert-icon" width="20" height="20" viewBox="0 0 24 24" class="shrink-0 mt-0.5">
+                                <polygon points="12,2 22,20 2,20" fill="#FFCC00" stroke="#000000" stroke-width="2"/>
+                                <rect x="11" y="8" width="2" height="6" fill="#000000"/>
+                                <rect x="11" y="16" width="2" height="2" fill="#000000"/>
+                            </svg>
+                            <div class="flex-1">
+                                <div id="alert-title" class="font-bold text-[#800000] text-[11px]">SOIL AMENDMENT, pH &amp; IRRIGATION ADVISORY:</div>
+                                <div id="alert-message" class="font-mono-retro text-[11px] leading-snug mt-0.5">
+                                    Initializing 5-channel sensor calibration...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Main 5 Sensor Gauge Panels (N, P, K, pH, Moisture) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5">
+                
+                <!-- NITROGEN (N) PANEL -->
+                <div class="win-outset p-2">
+                    <div class="win-titlebar text-[11px] mb-2">
+                        <span>[N] NITROGEN</span>
+                        <span class="font-mono-retro">0x001E</span>
+                    </div>
+                    <div class="flex gap-2 items-stretch">
+                        <div class="w-8 bg-[#000000] p-1 border-2 border-[#808080] flex flex-col justify-between" id="led-bar-n"></div>
+                        <div class="flex-1 flex flex-col justify-between">
+                            <div class="crt-screen win-inset p-1.5 text-right">
+                                <div class="text-[9px] text-[#00AA00] text-left">UREA / NH4+</div>
+                                <div class="text-2xl xl:text-3xl font-bold tracking-wider" id="val-n">095</div>
+                                <div class="text-[11px]">mg/kg (ppm)</div>
+                            </div>
+                            <div class="mt-1.5 space-y-1 text-[11px]">
+                                <div class="flex justify-between win-inset-gray px-1.5 py-0.5">
+                                    <span>Ideal:</span>
+                                    <span id="range-n" class="font-mono-retro font-bold">85-120</span>
+                                </div>
+                                <div class="flex justify-between items-center win-inset-gray px-1.5 py-0.5">
+                                    <span>Status:</span>
+                                    <span id="status-n" class="px-1 py-0.2 font-bold font-mono-retro bg-[#008000] text-white">OPTIMAL</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PHOSPHORUS (P) PANEL -->
+                <div class="win-outset p-2">
+                    <div class="win-titlebar text-[11px] mb-2">
+                        <span>[P] PHOSPHORUS</span>
+                        <span class="font-mono-retro">0x001F</span>
+                    </div>
+                    <div class="flex gap-2 items-stretch">
+                        <div class="w-8 bg-[#000000] p-1 border-2 border-[#808080] flex flex-col justify-between" id="led-bar-p"></div>
+                        <div class="flex-1 flex flex-col justify-between">
+                            <div class="crt-screen win-inset p-1.5 text-right">
+                                <div class="text-[9px] text-[#00AA00] text-left">P2O5 LEVEL</div>
+                                <div class="text-2xl xl:text-3xl font-bold tracking-wider" id="val-p">052</div>
+                                <div class="text-[11px]">mg/kg (ppm)</div>
+                            </div>
+                            <div class="mt-1.5 space-y-1 text-[11px]">
+                                <div class="flex justify-between win-inset-gray px-1.5 py-0.5">
+                                    <span>Ideal:</span>
+                                    <span id="range-p" class="font-mono-retro font-bold">40-65</span>
+                                </div>
+                                <div class="flex justify-between items-center win-inset-gray px-1.5 py-0.5">
+                                    <span>Status:</span>
+                                    <span id="status-p" class="px-1 py-0.2 font-bold font-mono-retro bg-[#008000] text-white">OPTIMAL</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- POTASSIUM (K) PANEL -->
+                <div class="win-outset p-2">
+                    <div class="win-titlebar text-[11px] mb-2">
+                        <span>[K] POTASSIUM</span>
+                        <span class="font-mono-retro">0x0020</span>
+                    </div>
+                    <div class="flex gap-2 items-stretch">
+                        <div class="w-8 bg-[#000000] p-1 border-2 border-[#808080] flex flex-col justify-between" id="led-bar-k"></div>
+                        <div class="flex-1 flex flex-col justify-between">
+                            <div class="crt-screen win-inset p-1.5 text-right">
+                                <div class="text-[9px] text-[#00AA00] text-left">K2O LEVEL</div>
+                                <div class="text-2xl xl:text-3xl font-bold tracking-wider" id="val-k">050</div>
+                                <div class="text-[11px]">mg/kg (ppm)</div>
+                            </div>
+                            <div class="mt-1.5 space-y-1 text-[11px]">
+                                <div class="flex justify-between win-inset-gray px-1.5 py-0.5">
+                                    <span>Ideal:</span>
+                                    <span id="range-k" class="font-mono-retro font-bold">40-65</span>
+                                </div>
+                                <div class="flex justify-between items-center win-inset-gray px-1.5 py-0.5">
+                                    <span>Status:</span>
+                                    <span id="status-k" class="px-1 py-0.2 font-bold font-mono-retro bg-[#008000] text-white">OPTIMAL</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SOIL pH PANEL -->
+                <div class="win-outset p-2">
+                    <div class="win-titlebar text-[11px] mb-2">
+                        <span>[pH] ACID / ALKALI</span>
+                        <span class="font-mono-retro">0x0006</span>
+                    </div>
+                    <div class="flex gap-2 items-stretch">
+                        <div class="w-8 bg-[#000000] p-1 border-2 border-[#808080] flex flex-col justify-between" id="led-bar-ph"></div>
+                        <div class="flex-1 flex flex-col justify-between">
+                            <div class="crt-screen win-inset p-1.5 text-right">
+                                <div class="text-[9px] text-[#00AA00] text-left">SOIL pH (0-14)</div>
+                                <div class="text-2xl xl:text-3xl font-bold tracking-wider" id="val-ph">6.4</div>
+                                <div class="text-[11px]" id="ph-nature-label">SLIGHT ACIDIC</div>
+                            </div>
+                            <div class="mt-1.5 space-y-1 text-[11px]">
+                                <div class="flex justify-between win-inset-gray px-1.5 py-0.5">
+                                    <span>Ideal:</span>
+                                    <span id="range-ph" class="font-mono-retro font-bold">5.5-6.8</span>
+                                </div>
+                                <div class="flex justify-between items-center win-inset-gray px-1.5 py-0.5">
+                                    <span>Status:</span>
+                                    <span id="status-ph" class="px-1 py-0.2 font-bold font-mono-retro bg-[#008000] text-white">OPTIMAL</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SOIL MOISTURE PANEL -->
+                <div class="win-outset p-2 sm:col-span-2 lg:col-span-1">
+                    <div class="win-titlebar text-[11px] mb-2">
+                        <span>[H2O] MOISTURE</span>
+                        <span class="font-mono-retro">0x0012</span>
+                    </div>
+                    <div class="flex gap-2 items-stretch">
+                        <div class="w-8 bg-[#000000] p-1 border-2 border-[#808080] flex flex-col justify-between" id="led-bar-m"></div>
+                        <div class="flex-1 flex flex-col justify-between">
+                            <div class="crt-screen win-inset p-1.5 text-right">
+                                <div class="text-[9px] text-[#00AA00] text-left">VOL. WATER</div>
+                                <div class="text-2xl xl:text-3xl font-bold tracking-wider" id="val-m">068</div>
+                                <div class="text-[11px]">% VWC</div>
+                            </div>
+                            <div class="mt-1.5 space-y-1 text-[11px]">
+                                <div class="flex justify-between win-inset-gray px-1.5 py-0.5">
+                                    <span>Ideal:</span>
+                                    <span id="range-m" class="font-mono-retro font-bold">65-85%</span>
+                                </div>
+                                <div class="flex justify-between items-center win-inset-gray px-1.5 py-0.5">
+                                    <span>Status:</span>
+                                    <span id="status-m" class="px-1 py-0.2 font-bold font-mono-retro bg-[#008000] text-white">OPTIMAL</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Bottom Split: Retro Oscilloscope Trend Chart & RS-485 Serial Monitor -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-3">
+                
+                <!-- Retro Pixel Trend Chart (6 Cols) -->
+                <div class="lg:col-span-6 win-outset p-2 flex flex-col">
+                    <div class="win-titlebar text-xs mb-2">
+                        <span>5-PROBE TELEMETRY HISTORY PLOTTER</span>
+                        <span class="font-mono-retro">NPK | pH(x15) | H2O(%)</span>
+                    </div>
+                    
+                    <!-- Channel Toggle Checkboxes -->
+                    <div class="flex flex-wrap items-center justify-between gap-2 mb-2 text-[11px] px-1">
+                        <div class="flex flex-wrap items-center gap-2.5">
+                            <label class="flex items-center gap-1 cursor-pointer font-bold">
+                                <input type="checkbox" id="chk-n" checked onchange="drawChart()">
+                                <span class="inline-block w-2.5 h-2.5 bg-[#00FF00] border border-black"></span>
+                                <span>N</span>
+                            </label>
+                            <label class="flex items-center gap-1 cursor-pointer font-bold">
+                                <input type="checkbox" id="chk-p" checked onchange="drawChart()">
+                                <span class="inline-block w-2.5 h-2.5 bg-[#00FFFF] border border-black"></span>
+                                <span>P</span>
+                            </label>
+                            <label class="flex items-center gap-1 cursor-pointer font-bold">
+                                <input type="checkbox" id="chk-k" checked onchange="drawChart()">
+                                <span class="inline-block w-2.5 h-2.5 bg-[#FFB000] border border-black"></span>
+                                <span>K</span>
+                            </label>
+                            <label class="flex items-center gap-1 cursor-pointer font-bold">
+                                <input type="checkbox" id="chk-ph" checked onchange="drawChart()">
+                                <span class="inline-block w-2.5 h-2.5 bg-[#FF44FF] border border-black"></span>
+                                <span>pH (x15)</span>
+                            </label>
+                            <label class="flex items-center gap-1 cursor-pointer font-bold">
+                                <input type="checkbox" id="chk-m" checked onchange="drawChart()">
+                                <span class="inline-block w-2.5 h-2.5 bg-[#3399FF] border border-black"></span>
+                                <span>Moist (%)</span>
+                            </label>
+                        </div>
+                        <button onclick="clearHistory()" class="win-btn py-0.5 px-2 text-[11px] min-h-0">Clear Plot</button>
+                    </div>
+
+                    <!-- Responsive Canvas Wrapper -->
+                    <div id="chart-container" class="win-inset bg-[#001100] w-full h-56 relative">
+                        <canvas id="npk-canvas" class="w-full h-full block"></canvas>
+                    </div>
+                    <div class="text-[11px] font-mono-retro text-[#404040] mt-1 flex justify-between">
+                        <span>SAMPLES BUFFERED: <span id="sample-count">0</span>/30</span>
+                        <span>pH SCALED x15 (e.g. pH 7.0 = 105)</span>
+                    </div>
+                </div>
+
+                <!-- Arduino Uno RS-485 Modbus Serial Monitor (6 Cols) -->
+                <div class="lg:col-span-6 win-outset p-2 flex flex-col">
+                    <div class="win-titlebar text-xs mb-2">
+                        <span>SERIAL MONITOR - COM3 (9600,N,8,1)</span>
+                        <div class="flex items-center gap-1">
+                            <button onclick="toggleCRTColor()" class="win-btn py-0 px-1.5 text-[10px] min-h-0" title="Switch Green/Amber CRT">P31/P3</button>
+                        </div>
+                    </div>
+
+                    <div id="serial-console" class="crt-screen win-inset p-2 h-56 overflow-y-auto text-[11px] leading-relaxed select-text">
+                        <div>&gt; BIOS POST OK. ATmega328P @ 16MHz READY.</div>
+                        <div>&gt; SoftwareSerial(RX=D3, TX=D2) initialized @ 9600 baud.</div>
+                        <div>&gt; MAX485 DE/RE pins (D7/D8) set to LOW (RX Mode).</div>
+                        <div>&gt; Polling 7-in-1 Soil Probe (N, P, K, pH, Moisture) Slave ID 0x01...</div>
+                    </div>
+
+                    <!-- Manual TX Command Input -->
+                    <div class="mt-2 flex gap-1.5">
+                        <input type="text" id="serial-input" placeholder="Send command (e.g. READ, CALIBRATE, VER, HELP)..." 
+                               onkeydown="if(event.key==='Enter') sendSerialCommand()"
+                               class="win-inset px-2 py-1 text-xs font-mono-retro flex-1 outline-none">
+                        <button onclick="sendSerialCommand()" class="win-btn text-xs py-1 px-3">SEND TX</button>
+                        <button onclick="clearConsole()" class="win-btn text-xs py-1 px-2">CLR</button>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Soil Probe Simulator Controls (Manual Override for Testing) -->
+            <div class="win-groupbox">
+                <span class="win-groupbox-title" id="workbench-title">5-PROBE SOIL SAMPLE TEST BENCH (MANUAL / HARDWARE MODE ACTIVE — ADJUST SLIDERS OR VALUES)</span>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5 pt-1 text-xs">
+                    <!-- N -->
+                    <div class="win-inset-gray p-2">
+                        <div class="flex justify-between font-bold mb-1">
+                            <span>Nitrogen (N):</span>
+                            <span id="sim-n-label" class="font-mono-retro">95 mg/kg</span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <input type="range" id="slider-n" min="5" max="240" value="95" oninput="manualSliderUpdate('slider')" class="w-full cursor-pointer">
+                            <input type="number" id="num-n" min="0" max="250" value="95" oninput="manualSliderUpdate('num')" class="win-inset w-14 px-1 py-0.5 text-right font-mono-retro text-xs">
+                        </div>
+                    </div>
+                    <!-- P -->
+                    <div class="win-inset-gray p-2">
+                        <div class="flex justify-between font-bold mb-1">
+                            <span>Phosphorus (P):</span>
+                            <span id="sim-p-label" class="font-mono-retro">52 mg/kg</span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <input type="range" id="slider-p" min="5" max="240" value="52" oninput="manualSliderUpdate('slider')" class="w-full cursor-pointer">
+                            <input type="number" id="num-p" min="0" max="250" value="52" oninput="manualSliderUpdate('num')" class="win-inset w-14 px-1 py-0.5 text-right font-mono-retro text-xs">
+                        </div>
+                    </div>
+                    <!-- K -->
+                    <div class="win-inset-gray p-2">
+                        <div class="flex justify-between font-bold mb-1">
+                            <span>Potassium (K):</span>
+                            <span id="sim-k-label" class="font-mono-retro">50 mg/kg</span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <input type="range" id="slider-k" min="5" max="240" value="50" oninput="manualSliderUpdate('slider')" class="w-full cursor-pointer">
+                            <input type="number" id="num-k" min="0" max="250" value="50" oninput="manualSliderUpdate('num')" class="win-inset w-14 px-1 py-0.5 text-right font-mono-retro text-xs">
+                        </div>
+                    </div>
+                    <!-- pH -->
+                    <div class="win-inset-gray p-2">
+                        <div class="flex justify-between font-bold mb-1">
+                            <span>Soil pH:</span>
+                            <span id="sim-ph-label" class="font-mono-retro">6.4 pH</span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <input type="range" id="slider-ph" min="3.5" max="9.5" step="0.1" value="6.4" oninput="manualSliderUpdate('slider')" class="w-full cursor-pointer">
+                            <input type="number" id="num-ph" min="3.0" max="10.0" step="0.1" value="6.4" oninput="manualSliderUpdate('num')" class="win-inset w-14 px-1 py-0.5 text-right font-mono-retro text-xs">
+                        </div>
+                    </div>
+                    <!-- Moisture -->
+                    <div class="win-inset-gray p-2 sm:col-span-2 lg:col-span-1">
+                        <div class="flex justify-between font-bold mb-1">
+                            <span>Moisture:</span>
+                            <span id="sim-m-label" class="font-mono-retro">68 %</span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <input type="range" id="slider-m" min="5" max="100" value="68" oninput="manualSliderUpdate('slider')" class="w-full cursor-pointer">
+                            <input type="number" id="num-m" min="0" max="100" value="68" oninput="manualSliderUpdate('num')" class="win-inset w-14 px-1 py-0.5 text-right font-mono-retro text-xs">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ==================== VIEW 2: HARDWARE WIRING PINOUT ==================== -->
+        <div id="view-wiring" class="p-3 hidden space-y-3 flex-1">
+            <div class="win-outset p-3 bg-[#C0C0C0]">
+                <div class="win-titlebar text-xs mb-3">
+                    <span>HARDWARE INTERFACE SCHEMATIC: ARDUINO UNO + MAX485 TTL-TO-RS485 + 7-IN-1 SOIL PROBE</span>
+                    <span>REV 2.95</span>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+                    <!-- Crisp Inline SVG Wiring Diagram -->
+                    <div class="lg:col-span-7 win-inset bg-[#001100] p-3 flex flex-col items-center justify-center">
+                        <svg viewBox="0 0 520 260" class="w-full h-auto max-h-64 font-mono-retro">
+                            <defs>
+                                <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+                                    <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#003300" stroke-width="1"/>
+                                </pattern>
+                            </defs>
+                            <rect width="520" height="260" fill="url(#grid)" />
+
+                            <!-- Arduino Uno Box -->
+                            <rect x="20" y="30" width="140" height="200" fill="#004466" stroke="#00FF00" stroke-width="2"/>
+                            <text x="32" y="52" fill="#FFFFFF" font-size="12" font-weight="bold">ARDUINO UNO R3</text>
+                            <text x="32" y="68" fill="#00FF00" font-size="10">ATmega328P</text>
+                            
+                            <!-- Uno Pins -->
+                            <text x="115" y="95" fill="#FFFF00" font-size="10">5V  ■</text>
+                            <text x="115" y="115" fill="#CCCCCC" font-size="10">GND ■</text>
+                            <text x="115" y="140" fill="#00FFFF" font-size="10">D2  ■</text>
+                            <text x="115" y="160" fill="#00FFFF" font-size="10">D3  ■</text>
+                            <text x="115" y="185" fill="#FF88FF" font-size="10">D7  ■</text>
+                            <text x="115" y="205" fill="#FF88FF" font-size="10">D8  ■</text>
+
+                            <!-- MAX485 Module Box -->
+                            <rect x="220" y="50" width="110" height="165" fill="#222244" stroke="#00FF00" stroke-width="2"/>
+                            <text x="235" y="70" fill="#FFFFFF" font-size="11" font-weight="bold">MAX485 TTL</text>
+                            <text x="230" y="95" fill="#FFFF00" font-size="10">■ VCC</text>
+                            <text x="230" y="115" fill="#CCCCCC" font-size="10">■ GND</text>
+                            <text x="230" y="140" fill="#00FFFF" font-size="10">■ DI</text>
+                            <text x="230" y="160" fill="#00FFFF" font-size="10">■ RO</text>
+                            <text x="230" y="185" fill="#FF88FF" font-size="10">■ DE</text>
+                            <text x="230" y="205" fill="#FF88FF" font-size="10">■ RE</text>
+
+                            <text x="305" y="120" fill="#FF5555" font-size="10">A ■</text>
+                            <text x="305" y="150" fill="#55AAFF" font-size="10">B ■</text>
+
+                            <!-- NPK + pH + Moisture Sensor Probe Box -->
+                            <rect x="385" y="48" width="120" height="160" fill="#1a1a1a" stroke="#FFB000" stroke-width="2"/>
+                            <text x="395" y="68" fill="#FFB000" font-size="11" font-weight="bold">7-IN-1 PROBE</text>
+                            <text x="395" y="82" fill="#00FFFF" font-size="9">NPK + pH + H2O</text>
+                            <text x="393" y="120" fill="#FF5555" font-size="10">■ A (Yellow)</text>
+                            <text x="393" y="150" fill="#55AAFF" font-size="10">■ B (Blue)</text>
+                            <text x="393" y="175" fill="#FF3333" font-size="10">■ VCC (9-24V)</text>
+                            <text x="393" y="192" fill="#CCCCCC" font-size="10">■ GND (Black)</text>
+
+                            <!-- Connecting Wires -->
+                            <line x1="152" y1="92" x2="232" y2="92" stroke="#FFFF00" stroke-width="2"/>
+                            <line x1="152" y1="112" x2="232" y2="112" stroke="#CCCCCC" stroke-width="2"/>
+                            <line x1="152" y1="137" x2="232" y2="137" stroke="#00FFFF" stroke-width="2"/>
+                            <line x1="152" y1="157" x2="232" y2="157" stroke="#00FFFF" stroke-width="2"/>
+                            <line x1="152" y1="182" x2="232" y2="182" stroke="#FF88FF" stroke-width="2"/>
+                            <line x1="152" y1="202" x2="232" y2="202" stroke="#FF88FF" stroke-width="2"/>
+
+                            <line x1="322" y1="117" x2="395" y2="117" stroke="#FF5555" stroke-width="2.5"/>
+                            <line x1="322" y1="147" x2="395" y2="147" stroke="#55AAFF" stroke-width="2.5"/>
+                        </svg>
+                    </div>
+
+                    <!-- Pinout Table & Modbus Frame Reference -->
+                    <div class="lg:col-span-5 space-y-2 text-xs">
+                        <div class="win-inset bg-white p-2">
+                            <div class="font-bold bg-[#000080] text-white px-2 py-1 mb-1">PIN-TO-PIN WIRING TABLE</div>
+                            <table class="w-full border-collapse font-mono-retro text-[11px]">
+                                <thead>
+                                    <tr class="bg-[#C0C0C0] border-b border-black">
+                                        <th class="p-1 text-left border border-[#808080]">Arduino Uno</th>
+                                        <th class="p-1 text-left border border-[#808080]">MAX485</th>
+                                        <th class="p-1 text-left border border-[#808080]">Function</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td class="p-1 border border-[#808080]">5V</td><td class="p-1 border border-[#808080]">VCC</td><td class="p-1 border border-[#808080]">Logic Power</td></tr>
+                                    <tr><td class="p-1 border border-[#808080]">GND</td><td class="p-1 border border-[#808080]">GND</td><td class="p-1 border border-[#808080]">Common Ground</td></tr>
+                                    <tr><td class="p-1 border border-[#808080]">Digital D2</td><td class="p-1 border border-[#808080]">DI</td><td class="p-1 border border-[#808080]">SoftSerial TX</td></tr>
+                                    <tr><td class="p-1 border border-[#808080]">Digital D3</td><td class="p-1 border border-[#808080]">RO</td><td class="p-1 border border-[#808080]">SoftSerial RX</td></tr>
+                                    <tr><td class="p-1 border border-[#808080]">Digital D7</td><td class="p-1 border border-[#808080]">DE</td><td class="p-1 border border-[#808080]">Driver Enable</td></tr>
+                                    <tr><td class="p-1 border border-[#808080]">Digital D8</td><td class="p-1 border border-[#808080]">RE</td><td class="p-1 border border-[#808080]">Receiver Enable</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="win-inset bg-[#FFFFE1] p-2 text-[11px] leading-snug">
+                            <strong>MODBUS RTU REGISTER MAP (9600, 8N1):</strong><br>
+                            <code class="font-mono-retro bg-white px-1 border border-[#808080] inline-block mt-1">
+                                0x0006: pH (x10) | 0x0012: Moisture (x10) | 0x001E..20: N, P, K
+                            </code>
+                            <p class="mt-1">Reads NPK (<code>0x001E–0x0020</code>), Soil pH (<code>0x0006</code>, scaled ÷10), and Volumetric Moisture (<code>0x0012</code>, scaled ÷10). External 12V DC required for sensor.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </div>
+
+        <!-- Classic 1995 Local Instrument Footer & Status Bar -->
+        <div class="bg-[#C0C0C0] border-t-2 border-[#FFFFFF] p-2 text-xs">
+            <div class="grid grid-cols-1 sm:grid-cols-4 gap-1.5 text-[11px]">
+                <div class="win-inset-gray px-2 py-1 truncate" id="footer-status">HARDWARE / MANUAL MODE: Adjust N, P, K, pH, Moisture sliders or toggle DEMO MODE.</div>
+                <div class="win-inset-gray px-2 py-1 font-mono-retro text-center" id="footer-mode-info">MODE: MANUAL | SAMPLES: 0</div>
+                <div class="win-inset-gray px-2 py-1 font-mono-retro text-center">PORT: COM3 | BAUD: 9600 8N1</div>
+                <div class="win-inset-gray px-2 py-1 text-right font-mono-retro flex items-center justify-between sm:justify-end gap-3">
+                    <span id="last-poll-time">LAST RX: --:--:--</span>
+                    <span class="font-bold border-l border-[#808080] pl-2" id="win95-clock">11:15 AM</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Win95 Modal / Message Box -->
+    <div id="win95-modal" class="fixed inset-0 bg-black/40 hidden items-center justify-center z-50 p-4">
+        <div class="win-outset w-full max-w-md shadow-2xl">
+            <div class="win-titlebar text-xs">
+                <span id="modal-title">System Message</span>
+                <button onclick="closeModal()" class="win-btn win-btn-sm font-bold">X</button>
+            </div>
+            <div class="p-4 flex items-start gap-3 text-xs">
+                <svg width="32" height="32" viewBox="0 0 32 32" class="shrink-0">
+                    <circle cx="16" cy="16" r="14" fill="#000080" stroke="#000" stroke-width="2"/>
+                    <text x="13" y="22" fill="#FFFFFF" font-family="serif" font-weight="bold" font-size="18">i</text>
+                </svg>
+                <div id="modal-body" class="leading-relaxed">
+                    Message text goes here.
+                </div>
+            </div>
+            <div class="pb-3 px-4 flex justify-center">
+                <button onclick="closeModal()" class="win-btn px-6">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // =========================================================================
+        // ARDUINO UNO 5-IN-1 SOIL TELEMETRY SYSTEM v2.95 - CORE LOGIC
+        // =========================================================================
+
+        let isConnected = true;
+        let isDemoMode = false;
+        let isAmberCRT = false;
+        let autoFollowBestCrop = true;
+        let pollTimer = null;
+        let demoTick = 0;
+
+        // Current Sensor Values (N, P, K in mg/kg | pH in 0-14 | m = Moisture %)
+        let currentSoil = { n: 95, p: 52, k: 50, ph: 6.4, m: 68 };
+        let demoAnchorSoil = { n: 95, p: 52, k: 50, ph: 6.4, m: 68 };
+
+        const MAX_HISTORY = 30;
+        let historyLog = [];
+        let csvFullLog = [];
+
+        // Comprehensive 5-Parameter Crop Agronomy Database
+        const CROP_PRESETS = {
+            rice: {
+                name: "Rice / Paddy",
+                latin: "Oryza sativa",
+                profileNote: "Balanced NPK with slightly acidic soil (pH 5.5-6.8) and high moisture supports tillering & grain fill.",
+                n:  { min: 85,  max: 120, lowTip: "Apply Ammonium Sulfate or Urea in split doses.", highTip: "Excess N increases blast disease risk." },
+                p:  { min: 40,  max: 65,  lowTip: "Incorporate Triple Super Phosphate (TSP).", highTip: "Phosphorus high; hold P application." },
+                k:  { min: 40,  max: 65,  lowTip: "Apply Potassium Chloride (KCl) at panicle stage.", highTip: "Potassium high; maintain water balance." },
+                ph: { min: 5.5, max: 6.8, lowTip: "Soil too acidic (<5.5); apply Agricultural Lime.", highTip: "High pH (>6.8) locks Iron/Zinc; apply Gypsum." },
+                m:  { min: 65,  max: 85,  lowTip: "Moisture low for paddy; flood/irrigate field.", highTip: "Drain excess stagnant water during ripening." }
+            },
+            wheat: {
+                name: "Wheat",
+                latin: "Triticum aestivum",
+                profileNote: "Strong Nitrogen, near-neutral pH (6.0-7.5), and moderate moisture drive dense spikelet formation.",
+                n:  { min: 100, max: 140, lowTip: "Apply Urea (46-0-0) @ 50 kg/acre top-dressing.", highTip: "Reduce Nitrogen input to prevent lodging." },
+                p:  { min: 45,  max: 75,  lowTip: "Apply DAP (18-46-0) or Single Super Phosphate.", highTip: "Phosphorus adequate; skip phosphate." },
+                k:  { min: 30,  max: 55,  lowTip: "Apply Muriate of Potash (MOP 0-0-60).", highTip: "Potassium sufficient in root zone." },
+                ph: { min: 6.0, max: 7.5, lowTip: "Apply Calcitic Lime to raise pH toward neutral.", highTip: "Apply Elemental Sulfur or organic compost." },
+                m:  { min: 45,  max: 65,  lowTip: "Irrigate at Crown Root Initiation / flowering.", highTip: "Waterlogging harms wheat roots; improve drainage." }
+            },
+            maize: {
+                name: "Maize / Corn",
+                latin: "Zea mays",
+                profileNote: "High Nitrogen & Potassium with pH 5.8-7.0 and steady moisture support tall stalk vigor and cob fill.",
+                n:  { min: 120, max: 165, lowTip: "Side-dress with Urea or UAN at V6 stage.", highTip: "Monitor nitrate leaching; hold N top-dress." },
+                p:  { min: 50,  max: 80,  lowTip: "Band-apply DAP or MAP near root zone.", highTip: "Phosphorus sufficient for ear development." },
+                k:  { min: 60,  max: 95,  lowTip: "Apply Muriate of Potash (0-0-60) for stalk strength.", highTip: "Potassium abundant in soil profile." },
+                ph: { min: 5.8, max: 7.0, lowTip: "Apply Dolomitic Lime (adds Ca + Mg).", highTip: "Add organic matter / Sulfur to lower pH." },
+                m:  { min: 55,  max: 75,  lowTip: "Irrigate immediately—critical at silking stage.", highTip: "Reduce irrigation; avoid root asphyxiation." }
+            },
+            cotton: {
+                name: "Cotton",
+                latin: "Gossypium hirsutum",
+                profileNote: "Moderate Nitrogen, elevated Potassium, pH 6.0-7.5, and moderate moisture optimize boll retention.",
+                n:  { min: 80,  max: 115, lowTip: "Apply foliar Urea or Calcium Ammonium Nitrate.", highTip: "Excess N causes rank growth and boll shed." },
+                p:  { min: 40,  max: 65,  lowTip: "Apply Single Super Phosphate (SSP) pre-bloom.", highTip: "Phosphorus sufficient; avoid over-application." },
+                k:  { min: 70,  max: 110, lowTip: "Apply Potassium Sulfate (SOP) during boll fill.", highTip: "Potassium optimal/high for lint quality." },
+                ph: { min: 6.0, max: 7.5, lowTip: "Lime acidic soil to prevent Aluminum toxicity.", highTip: "Use Ammonium Sulfate to slightly acidify." },
+                m:  { min: 40,  max: 60,  lowTip: "Provide deep drip irrigation during boll set.", highTip: "High moisture causes boll rot; pause watering." }
+            },
+            sugarcane: {
+                name: "Sugarcane",
+                latin: "Saccharum officinarum",
+                profileNote: "Heavy Nitrogen & Potassium with high soil moisture (65-80%) fuel cane elongation & sucrose yield.",
+                n:  { min: 150, max: 210, lowTip: "Apply split doses of Urea in formative phase.", highTip: "Reduce late N to maximize sucrose purity." },
+                p:  { min: 60,  max: 90,  lowTip: "Apply Rock Phosphate or DAP in furrows.", highTip: "Phosphorus adequate for root proliferation." },
+                k:  { min: 110, max: 160, lowTip: "Apply Muriate of Potash (MOP) for sugar recovery.", highTip: "Potassium sufficient; maintain soil moisture." },
+                ph: { min: 6.0, max: 7.5, lowTip: "Incorporate Lime before planting.", highTip: "Apply Gypsum / pressmud to buffer alkalinity." },
+                m:  { min: 65,  max: 80,  lowTip: "Increase furrow/drip irrigation frequency.", highTip: "Ensure field drainage during maturity phase." }
+            },
+            tomato: {
+                name: "Tomato",
+                latin: "Solanum lycopersicum",
+                profileNote: "High Potassium & Phosphorus with slightly acidic pH (6.0-6.8) sustain heavy fruiting & prevent blossom rot.",
+                n:  { min: 130, max: 170, lowTip: "Apply Calcium Nitrate or NPK 19-19-19.", highTip: "Excess N causes leafy growth & poor fruit set!" },
+                p:  { min: 65,  max: 95,  lowTip: "Apply Bone Meal or Monoammonium Phosphate.", highTip: "Phosphorus high; monitor micronutrient uptake." },
+                k:  { min: 150, max: 210, lowTip: "Apply Potassium Sulfate (SOP) for fruit firmness.", highTip: "Potassium optimal/high; avoid excess salts." },
+                ph: { min: 6.0, max: 6.8, lowTip: "Add Dolomitic Lime to boost Calcium & prevent BER.", highTip: "Add peat moss or Elemental Sulfur." },
+                m:  { min: 60,  max: 75,  lowTip: "Maintain steady drip moisture to avoid fruit cracking.", highTip: "Reduce watering to prevent fungal wilt." }
+            },
+            potato: {
+                name: "Potato",
+                latin: "Solanum tuberosum",
+                profileNote: "Acidic soil (pH 5.0-6.0) prevents common scab while high Potassium & steady moisture drive tuber bulking.",
+                n:  { min: 100, max: 140, lowTip: "Apply Ammonium Sulfate at hilling stage.", highTip: "Excess N delays tuber maturity & lowers starch." },
+                p:  { min: 70,  max: 105, lowTip: "Apply Triple Super Phosphate for early tuber set.", highTip: "Phosphorus abundant in root zone." },
+                k:  { min: 140, max: 195, lowTip: "Apply Sulfate of Potash (SOP) for dry matter.", highTip: "Potassium sufficient; avoid chloride salts." },
+                ph: { min: 5.0, max: 6.0, lowTip: "Apply small Lime dose only if pH < 4.9.", highTip: "High pH (>6.0) risks potato scab! Apply Sulfur." },
+                m:  { min: 60,  max: 75,  lowTip: "Irrigate evenly during tuber initiation.", highTip: "Excess moisture causes hollow heart & tuber rot." }
+            },
+            chickpea: {
+                name: "Chickpea / Pulses",
+                latin: "Cicer arietinum",
+                profileNote: "Low Nitrogen (self-fixing legume) with neutral pH (6.2-7.8) and low-moderate moisture favors nodulation.",
+                n:  { min: 20,  max: 45,  lowTip: "Apply starter 15 kg/ha Urea + Rhizobium.", highTip: "High soil N suppresses root nodule fixation!" },
+                p:  { min: 45,  max: 70,  lowTip: "Apply Single Super Phosphate (SSP) for roots.", highTip: "Phosphorus adequate for pod formation." },
+                k:  { min: 30,  max: 55,  lowTip: "Apply small dose of Potassium Sulfate.", highTip: "Potassium sufficient in soil." },
+                ph: { min: 6.2, max: 7.8, lowTip: "Lime acidic soil to support Rhizobium bacteria.", highTip: "Apply Gypsum if soil is sodic (>8.0)." },
+                m:  { min: 30,  max: 50,  lowTip: "Light irrigation at pre-flowering & pod fill.", highTip: "Chickpea is sensitive to wet soil; stop watering!" }
+            },
+            mustard: {
+                name: "Mustard / Canola",
+                latin: "Brassica juncea",
+                profileNote: "Moderate NPK, pH 6.0-7.5, and moderate soil moisture (40-60%) support high oilseed yield.",
+                n:  { min: 75,  max: 110, lowTip: "Top-dress Ammonium Sulfate (adds vital Sulfur).", highTip: "Excess N reduces seed oil concentration." },
+                p:  { min: 35,  max: 60,  lowTip: "Apply Single Super Phosphate (SSP) at sowing.", highTip: "Phosphorus levels adequate." },
+                k:  { min: 30,  max: 55,  lowTip: "Apply Muriate of Potash (0-0-60).", highTip: "Potassium optimal." },
+                ph: { min: 6.0, max: 7.5, lowTip: "Apply Lime if pH drops below 5.8.", highTip: "Incorporate organic compost / Gypsum." },
+                m:  { min: 40,  max: 60,  lowTip: "Provide light irrigation at rosette/pod stage.", highTip: "Avoid over-irrigation to prevent white rust." }
+            },
+            onion: {
+                name: "Onion",
+                latin: "Allium cepa",
+                profileNote: "Elevated Phosphorus & Potassium with pH 6.0-7.0 and consistent moisture build dense, long-storing bulbs.",
+                n:  { min: 80,  max: 115, lowTip: "Apply Calcium Ammonium Nitrate early in growth.", highTip: "Stop N early to prevent thick necks & rot." },
+                p:  { min: 55,  max: 85,  lowTip: "Incorporate DAP or Bone Meal pre-transplant.", highTip: "Phosphorus sufficient for bulb initiation." },
+                k:  { min: 80,  max: 125, lowTip: "Apply Potassium Sulfate (SOP) for shelf life.", highTip: "Potassium levels optimal." },
+                ph: { min: 6.0, max: 7.0, lowTip: "Add Lime—onions perform poorly in acid soil.", highTip: "Add Elemental Sulfur to improve micronutrient uptake." },
+                m:  { min: 55,  max: 70,  lowTip: "Shallow roots need frequent light irrigation.", highTip: "Withhold water 2 weeks before harvest to cure bulbs." }
+            },
+            groundnut: {
+                name: "Groundnut / Peanut",
+                latin: "Arachis hypogaea",
+                profileNote: "Low Nitrogen (legume), pH 5.8-6.8, and well-drained moist soil (45-65%) optimize pegging & pod fill.",
+                n:  { min: 25,  max: 50,  lowTip: "Apply starter Ammonium Sulfate + inoculant.", highTip: "Excess N favors foliage over subterranean pods." },
+                p:  { min: 40,  max: 65,  lowTip: "Apply Single Super Phosphate (P + Calcium).", highTip: "Phosphorus adequate." },
+                k:  { min: 45,  max: 75,  lowTip: "Apply Potassium Sulfate at flowering stage.", highTip: "Potassium sufficient; ensure Calcium balance." },
+                ph: { min: 5.8, max: 6.8, lowTip: "Apply Lime + Gypsum at pegging for filled pods.", highTip: "High pH induces Iron chlorosis; apply Fe-chelate." },
+                m:  { min: 45,  max: 65,  lowTip: "Keep top 10cm moist during peg penetration.", highTip: "Drain excess moisture to prevent pod rot." }
+            },
+            garden: {
+                name: "General Garden / Leafy Greens",
+                latin: "Mixed Horticulture",
+                profileNote: "Balanced NPK, near-neutral pH (6.0-7.0), and steady moisture (55-75%) support backyard vegetables & herbs.",
+                n:  { min: 65,  max: 100, lowTip: "Mix aged compost, blood meal, or fish emulsion.", highTip: "Flush soil lightly with water; avoid synthetic N." },
+                p:  { min: 35,  max: 60,  lowTip: "Add rock phosphate or steamed bone meal.", highTip: "Phosphorus abundant; no amendment needed." },
+                k:  { min: 45,  max: 75,  lowTip: "Add kelp meal or wood ash sparingly.", highTip: "Potassium levels elevated." },
+                ph: { min: 6.0, max: 7.0, lowTip: "Mix garden lime or wood ash into topsoil.", highTip: "Add pine bark mulch, peat, or garden sulfur." },
+                m:  { min: 55,  max: 75,  lowTip: "Water deeply in morning and mulch beds.", highTip: "Allow top inch of soil to dry between waterings." }
+            }
+        };
+
+        // Initialize UI on Load
+        window.onload = function () {
+            populateCropDropdown();
+            buildLEDMeters();
+            updateClock();
+            setInterval(updateClock, 1000);
+
+            syncManualInputs(currentSoil.n, currentSoil.p, currentSoil.k, currentSoil.ph, currentSoil.m);
+
+            for (let i = 0; i < 6; i++) {
+                simulateSensorStep(true);
+            }
+
+            updateUI();
+            startPollingLoop();
+
+            window.addEventListener('resize', drawChart);
+            setTimeout(drawChart, 50);
+        };
+
+        function startPollingLoop() {
+            if (pollTimer) clearInterval(pollTimer);
+            pollTimer = setInterval(() => {
+                if (isConnected && isDemoMode) {
+                    simulateSensorStep(false);
+                }
+            }, 2000);
+        }
+
+        function syncManualInputs(n, p, k, ph, m) {
+            document.getElementById('slider-n').value = n;
+            document.getElementById('slider-p').value = p;
+            document.getElementById('slider-k').value = k;
+            document.getElementById('slider-ph').value = ph.toFixed(1);
+            document.getElementById('slider-m').value = m;
+
+            document.getElementById('num-n').value = n;
+            document.getElementById('num-p').value = p;
+            document.getElementById('num-k').value = k;
+            document.getElementById('num-ph').value = ph.toFixed(1);
+            document.getElementById('num-m').value = m;
+
+            document.getElementById('sim-n-label').textContent = `${n} mg/kg`;
+            document.getElementById('sim-p-label').textContent = `${p} mg/kg`;
+            document.getElementById('sim-k-label').textContent = `${k} mg/kg`;
+            document.getElementById('sim-ph-label').textContent = `${ph.toFixed(1)} pH`;
+            document.getElementById('sim-m-label').textContent = `${m} %`;
+        }
+
+        function simulateSensorStep(silent) {
+            if (!isConnected) return;
+
+            demoTick += 0.55;
+
+            const baseN  = isDemoMode ? demoAnchorSoil.n  : parseInt(document.getElementById('slider-n').value, 10);
+            const baseP  = isDemoMode ? demoAnchorSoil.p  : parseInt(document.getElementById('slider-p').value, 10);
+            const baseK  = isDemoMode ? demoAnchorSoil.k  : parseInt(document.getElementById('slider-k').value, 10);
+            const basePH = isDemoMode ? demoAnchorSoil.ph : parseFloat(document.getElementById('slider-ph').value);
+            const baseM  = isDemoMode ? demoAnchorSoil.m  : parseInt(document.getElementById('slider-m').value, 10);
+
+            const waveN  = isDemoMode ? Math.round(Math.sin(demoTick * 0.7) * 22 + Math.cos(demoTick * 0.25) * 16) : 0;
+            const waveP  = isDemoMode ? Math.round(Math.cos(demoTick * 0.6) * 15 + Math.sin(demoTick * 0.3) * 10) : 0;
+            const waveK  = isDemoMode ? Math.round(Math.sin(demoTick * 0.5 + 1.2) * 24 + Math.cos(demoTick * 0.2) * 14) : 0;
+            const wavePH = isDemoMode ? (Math.sin(demoTick * 0.4) * 0.4 + Math.cos(demoTick * 0.2) * 0.2) : 0;
+            const waveM  = isDemoMode ? Math.round(Math.cos(demoTick * 0.45) * 10 + Math.sin(demoTick * 0.2) * 6) : 0;
+            const jitter = () => Math.floor(Math.random() * 3) - 1;
+
+            currentSoil.n  = Math.min(240, Math.max(12, baseN + waveN + jitter()));
+            currentSoil.p  = Math.min(240, Math.max(12, baseP + waveP + jitter()));
+            currentSoil.k  = Math.min(240, Math.max(12, baseK + waveK + jitter()));
+            currentSoil.ph = Math.round(Math.min(9.5, Math.max(3.5, basePH + wavePH)) * 10) / 10;
+            currentSoil.m  = Math.min(100, Math.max(5, baseM + waveM + jitter()));
+
+            if (isDemoMode) {
+                syncManualInputs(currentSoil.n, currentSoil.p, currentSoil.k, currentSoil.ph, currentSoil.m);
+            }
+
+            const now = new Date();
+            const timestamp = now.toTimeString().split(' ')[0];
+
+            historyLog.push({
+                time: timestamp,
+                n: currentSoil.n,
+                p: currentSoil.p,
+                k: currentSoil.k,
+                ph: currentSoil.ph,
+                m: currentSoil.m
+            });
+            if (historyLog.length > MAX_HISTORY) historyLog.shift();
+
+            const cropKey = document.getElementById('crop-select').value || 'rice';
+            csvFullLog.push({
+                iso: now.toISOString(),
+                time: timestamp,
+                crop: CROP_PRESETS[cropKey] ? CROP_PRESETS[cropKey].name : 'Rice / Paddy',
+                n: currentSoil.n,
+                p: currentSoil.p,
+                k: currentSoil.k,
+                ph: currentSoil.ph.toFixed(1),
+                m: currentSoil.m
+            });
+
+            if (!silent) {
+                logModbusFrame(timestamp, currentSoil);
+            }
+
+            document.getElementById('last-poll-time').textContent = `LAST RX: ${timestamp}`;
+            updateUI();
+        }
+
+        function logModbusFrame(timestamp, soil) {
+            const consoleEl = document.getElementById('serial-console');
+            const toHex = (num) => Math.round(num).toString(16).toUpperCase().padStart(4, '0');
+            const nHex  = toHex(soil.n);
+            const pHex  = toHex(soil.p);
+            const kHex  = toHex(soil.k);
+            const phHex = toHex(soil.ph * 10);
+            const mHex  = toHex(soil.m * 10);
+
+            const rxBytes = `01 03 0A ${phHex} ${mHex} ${nHex} ${pHex} ${kHex} CRC_OK`;
+
+            const line = document.createElement('div');
+            line.innerHTML = `<span class="opacity-75">[${timestamp}]</span> TX: 01 03 00 06 00 1B E4 01<br>` +
+                             `<span class="opacity-75">[${timestamp}]</span> RX: ${rxBytes} => <strong>N:${soil.n} P:${soil.p} K:${soil.k} | pH:${soil.ph.toFixed(1)} | H2O:${soil.m}%</strong>`;
+            consoleEl.appendChild(line);
+
+            while (consoleEl.children.length > 40) {
+                consoleEl.removeChild(consoleEl.firstChild);
+            }
+            consoleEl.scrollTop = consoleEl.scrollHeight;
+        }
+
+        function populateCropDropdown() {
+            const select = document.getElementById('crop-select');
+            select.innerHTML = '';
+            Object.entries(CROP_PRESETS).forEach(([key, crop]) => {
+                const opt = document.createElement('option');
+                opt.value = key;
+                opt.textContent = `${crop.name} (${crop.latin})`;
+                select.appendChild(opt);
+            });
+        }
+
+        // Build 12-segment vertical LED bars for N, P, K, pH, and Moisture
+        function buildLEDMeters() {
+            ['n', 'p', 'k', 'ph', 'm'].forEach(param => {
+                const container = document.getElementById(`led-bar-${param}`);
+                container.innerHTML = '';
+                for (let i = 11; i >= 0; i--) {
+                    const seg = document.createElement('div');
+                    let colorClass = 'led-green';
+                    if (param === 'ph') {
+                        // Rainbow pH scale: bottom = acidic (red/yellow), middle = neutral (green), top = alkaline (cyan/red)
+                        if (i <= 2 || i >= 10) colorClass = 'led-red';
+                        else if (i <= 4 || i >= 8) colorClass = 'led-yellow';
+                        else colorClass = 'led-green';
+                    } else if (param === 'm') {
+                        if (i <= 2) colorClass = 'led-red';
+                        else if (i <= 4) colorClass = 'led-yellow';
+                        else if (i >= 10) colorClass = 'led-cyan';
+                        else colorClass = 'led-green';
+                    } else {
+                        if (i >= 9) colorClass = 'led-red';
+                        else if (i >= 6) colorClass = 'led-yellow';
+                    }
+                    seg.className = `led-segment ${colorClass}`;
+                    seg.id = `led-${param}-${i}`;
+                    container.appendChild(seg);
+                }
+            });
+        }
+
+        // Evaluate all crops against current N, P, K, pH, and Moisture
+        function evaluateCropSuitability() {
+            const { n, p, k, ph, m } = currentSoil;
+            const scored = Object.entries(CROP_PRESETS).map(([key, crop]) => {
+                const scoreAxis = (val, min, max, slack) => {
+                    if (val >= min && val <= max) return 100;
+                    const halfSpan = Math.max(0.4, (max - min) / 2);
+                    const dist = val < min ? (min - val) : (val - max);
+                    const penalty = (dist / (halfSpan + slack)) * 70;
+                    return Math.max(5, Math.round(100 - penalty));
+                };
+
+                const sN  = scoreAxis(n,  crop.n.min,  crop.n.max,  35);
+                const sP  = scoreAxis(p,  crop.p.min,  crop.p.max,  25);
+                const sK  = scoreAxis(k,  crop.k.min,  crop.k.max,  35);
+                const sPH = scoreAxis(ph, crop.ph.min, crop.ph.max, 1.2);
+                const sM  = scoreAxis(m,  crop.m.min,  crop.m.max,  20);
+
+                // Weighted suitability across all 5 parameters
+                const totalScore = Math.round(sN * 0.25 + sP * 0.20 + sK * 0.20 + sPH * 0.20 + sM * 0.15);
+
+                return { key, crop, score: totalScore };
+            });
+
+            scored.sort((a, b) => b.score - a.score);
+            return scored;
+        }
+
+        function toggleAutoTarget() {
+            autoFollowBestCrop = !autoFollowBestCrop;
+            const btn = document.getElementById('btn-auto-lock');
+            if (autoFollowBestCrop) {
+                btn.classList.add('active');
+                btn.textContent = 'AUTO: ON';
+            } else {
+                btn.classList.remove('active');
+                btn.textContent = 'AUTO: OFF';
+            }
+            updateUI();
+        }
+
+        function selectRankedCrop(cropKey) {
+            autoFollowBestCrop = false;
+            const btn = document.getElementById('btn-auto-lock');
+            btn.classList.remove('active');
+            btn.textContent = 'AUTO: OFF';
+            document.getElementById('crop-select').value = cropKey;
+            updateUI();
+            document.getElementById('footer-status').textContent = `Inspecting 5-probe profile: ${CROP_PRESETS[cropKey].name}`;
+        }
+
+        function updateUI() {
+            const rankedCrops = evaluateCropSuitability();
+            const best = rankedCrops[0];
+
+            // Update #1 Best Crop CRT Readout
+            document.getElementById('best-crop-name').textContent = best.crop.name.toUpperCase();
+            document.getElementById('best-crop-latin').textContent = `${best.crop.latin} • Ideal pH: ${best.crop.ph.min}-${best.crop.ph.max} | Moisture: ${best.crop.m.min}-${best.crop.m.max}%`;
+            document.getElementById('best-crop-score').textContent = `MATCH: ${best.score}%`;
+            document.getElementById('best-crop-reason').textContent = best.crop.profileNote;
+
+            // Update Header Summary
+            document.getElementById('soil-npk-ratio').textContent = `NPK ${currentSoil.n}:${currentSoil.p}:${currentSoil.k} | pH ${currentSoil.ph.toFixed(1)} | H2O ${currentSoil.m}%`;
+
+            // Render Top-4 Ranked Crop Table
+            const tbody = document.getElementById('crop-ranking-body');
+            tbody.innerHTML = '';
+            rankedCrops.slice(0, 4).forEach((item, idx) => {
+                let badgeBg = 'bg-[#008000] text-white';
+                let badgeText = 'OPTIMAL';
+                if (item.score < 60) {
+                    badgeBg = 'bg-[#FF0000] text-white';
+                    badgeText = 'MARGINAL';
+                } else if (item.score < 82) {
+                    badgeBg = 'bg-[#FFCC00] text-black';
+                    badgeText = 'GOOD';
+                }
+
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-[#000080] hover:text-white cursor-pointer border-b border-[#DFDFDF]';
+                tr.onclick = () => selectRankedCrop(item.key);
+                tr.innerHTML = `
+                    <td class="p-1 border border-[#808080] font-bold">#${idx + 1} ${item.crop.name}</td>
+                    <td class="p-1 border border-[#808080] text-center font-bold">${item.score}%</td>
+                    <td class="p-1 border border-[#808080] text-center">${item.crop.n.min}-${item.crop.n.max} / ${item.crop.p.min}-${item.crop.p.max} / ${item.crop.k.min}-${item.crop.k.max}</td>
+                    <td class="p-1 border border-[#808080] text-center">${item.crop.ph.min}-${item.crop.ph.max} | ${item.crop.m.min}-${item.crop.m.max}%</td>
+                    <td class="p-1 border border-[#808080] text-center"><span class="px-1.5 py-0.5 font-bold ${badgeBg}">${badgeText}</span></td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            // Auto-sync dropdown if AUTO mode is active
+            const cropSelect = document.getElementById('crop-select');
+            if (autoFollowBestCrop) {
+                cropSelect.value = best.key;
+            }
+            const activeCropKey = cropSelect.value || best.key;
+            const crop = CROP_PRESETS[activeCropKey];
+
+            let tips = [];
+
+            // 1. Update N, P, K Gauges
+            ['n', 'p', 'k'].forEach(key => {
+                const val = currentSoil[key];
+                const { min, max, lowTip, highTip } = crop[key];
+
+                document.getElementById(`val-${key}`).textContent = String(val).padStart(3, '0');
+                document.getElementById(`range-${key}`).textContent = `${min}-${max}`;
+
+                const activeCount = Math.min(12, Math.max(1, Math.round(val / 20)));
+                for (let i = 0; i < 12; i++) {
+                    const seg = document.getElementById(`led-${key}-${i}`);
+                    if (seg) seg.classList.toggle('on', i < activeCount);
+                }
+
+                const statusEl = document.getElementById(`status-${key}`);
+                if (val < min) {
+                    statusEl.textContent = 'LOW';
+                    statusEl.className = 'px-1 py-0.2 font-bold font-mono-retro bg-[#FF0000] text-white';
+                    tips.push(`[${key.toUpperCase()} LOW]: ${lowTip}`);
+                } else if (val > max) {
+                    statusEl.textContent = 'HIGH';
+                    statusEl.className = 'px-1 py-0.2 font-bold font-mono-retro bg-[#FF8800] text-black';
+                    tips.push(`[${key.toUpperCase()} HIGH]: ${highTip}`);
+                } else {
+                    statusEl.textContent = 'OPTIMAL';
+                    statusEl.className = 'px-1 py-0.2 font-bold font-mono-retro bg-[#008000] text-white';
+                }
+            });
+
+            // 2. Update Soil pH Gauge
+            const phVal = currentSoil.ph;
+            document.getElementById('val-ph').textContent = phVal.toFixed(1);
+            document.getElementById('range-ph').textContent = `${crop.ph.min.toFixed(1)}-${crop.ph.max.toFixed(1)}`;
+            const phNature = document.getElementById('ph-nature-label');
+            if (phVal < 5.5) phNature.textContent = 'STRONG ACIDIC';
+            else if (phVal < 6.6) phNature.textContent = 'SLIGHT ACIDIC';
+            else if (phVal <= 7.3) phNature.textContent = 'NEUTRAL pH';
+            else if (phVal <= 8.2) phNature.textContent = 'SLIGHT ALKALINE';
+            else phNature.textContent = 'STRONG ALKALINE';
+
+            // Map pH 3.5 -> 9.5 across 12 LEDs
+            const phActiveCount = Math.min(12, Math.max(1, Math.round(((phVal - 3.5) / 6.0) * 12)));
+            for (let i = 0; i < 12; i++) {
+                const seg = document.getElementById(`led-ph-${i}`);
+                if (seg) seg.classList.toggle('on', i < phActiveCount);
+            }
+
+            const statusPhEl = document.getElementById('status-ph');
+            if (phVal < crop.ph.min) {
+                statusPhEl.textContent = 'ACIDIC';
+                statusPhEl.className = 'px-1 py-0.2 font-bold font-mono-retro bg-[#FF0000] text-white';
+                tips.push(`[pH LOW]: ${crop.ph.lowTip}`);
+            } else if (phVal > crop.ph.max) {
+                statusPhEl.textContent = 'ALKALINE';
+                statusPhEl.className = 'px-1 py-0.2 font-bold font-mono-retro bg-[#FF8800] text-black';
+                tips.push(`[pH HIGH]: ${crop.ph.highTip}`);
+            } else {
+                statusPhEl.textContent = 'OPTIMAL';
+                statusPhEl.className = 'px-1 py-0.2 font-bold font-mono-retro bg-[#008000] text-white';
+            }
+
+            // 3. Update Soil Moisture (%) Gauge
+            const mVal = currentSoil.m;
+            document.getElementById('val-m').textContent = String(mVal).padStart(3, '0');
+            document.getElementById('range-m').textContent = `${crop.m.min}-${crop.m.max}%`;
+            const mActiveCount = Math.min(12, Math.max(1, Math.round((mVal / 100) * 12)));
+            for (let i = 0; i < 12; i++) {
+                const seg = document.getElementById(`led-m-${i}`);
+                if (seg) seg.classList.toggle('on', i < mActiveCount);
+            }
+
+            const statusMEl = document.getElementById('status-m');
+            if (mVal < crop.m.min) {
+                statusMEl.textContent = 'DRY';
+                statusMEl.className = 'px-1 py-0.2 font-bold font-mono-retro bg-[#FF0000] text-white';
+                tips.push(`[MOISTURE LOW]: ${crop.m.lowTip}`);
+            } else if (mVal > crop.m.max) {
+                statusMEl.textContent = 'WET';
+                statusMEl.className = 'px-1 py-0.2 font-bold font-mono-retro bg-[#0066CC] text-white';
+                tips.push(`[MOISTURE HIGH]: ${crop.m.highTip}`);
+            } else {
+                statusMEl.textContent = 'OPTIMAL';
+                statusMEl.className = 'px-1 py-0.2 font-bold font-mono-retro bg-[#008000] text-white';
+            }
+
+            // Update Agronomy Alert Box
+            const alertBox = document.getElementById('agronomy-alert');
+            const alertTitle = document.getElementById('alert-title');
+            const alertMsg = document.getElementById('alert-message');
+
+            if (tips.length === 0) {
+                alertBox.style.backgroundColor = '#E8FFE8';
+                alertTitle.style.color = '#006600';
+                alertTitle.textContent = `OPTIMAL 5-PROBE SOIL BALANCE FOR ${crop.name.toUpperCase()}:`;
+                alertMsg.textContent = `N, P, K, Soil pH (${phVal.toFixed(1)}), and Moisture (${mVal}%) are all within the ideal window for ${crop.name}.`;
+            } else {
+                alertBox.style.backgroundColor = '#FFFFE1';
+                alertTitle.style.color = '#800000';
+                alertTitle.textContent = `SOIL AMENDMENT, pH & IRRIGATION ADVISORY FOR ${crop.name.toUpperCase()}:`;
+                alertMsg.textContent = tips.join(' | ');
+            }
+
+            document.getElementById('sample-count').textContent = historyLog.length;
+            document.getElementById('footer-mode-info').textContent = `MODE: ${isDemoMode ? 'DEMO SIM' : 'MANUAL'} | SAMPLES: ${csvFullLog.length}`;
+
+            drawChart();
+        }
+
+        // Draw Retro 90s Oscilloscope 5-Channel Line Chart
+        function drawChart() {
+            const container = document.getElementById('chart-container');
+            const canvas = document.getElementById('npk-canvas');
+            if (!container || !canvas) return;
+
+            const rect = container.getBoundingClientRect();
+            if (rect.width === 0 || rect.height === 0) return;
+
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+
+            const ctx = canvas.getContext('2d');
+            const w = canvas.width;
+            const h = canvas.height;
+            const padL = 34;
+            const padR = 10;
+            const padT = 12;
+            const padB = 20;
+            const plotW = w - padL - padR;
+            const plotH = h - padT - padB;
+
+            ctx.fillStyle = '#001100';
+            ctx.fillRect(0, 0, w, h);
+
+            ctx.strokeStyle = '#003800';
+            ctx.lineWidth = 1;
+            ctx.fillStyle = '#00AA00';
+            ctx.font = '10px "Courier New", monospace';
+            ctx.textAlign = 'right';
+            ctx.textBaseline = 'middle';
+
+            for (let val = 0; val <= 250; val += 50) {
+                const y = padT + plotH - (val / 250) * plotH;
+                ctx.beginPath();
+                ctx.moveTo(padL, y);
+                ctx.lineTo(w - padR, y);
+                ctx.stroke();
+                ctx.fillText(val.toString(), padL - 4, y);
+            }
+
+            for (let i = 0; i <= 6; i++) {
+                const x = padL + (i / 6) * plotW;
+                ctx.beginPath();
+                ctx.moveTo(x, padT);
+                ctx.lineTo(x, padT + plotH);
+                ctx.stroke();
+            }
+
+            if (historyLog.length < 1) return;
+
+            const showN  = document.getElementById('chk-n').checked;
+            const showP  = document.getElementById('chk-p').checked;
+            const showK  = document.getElementById('chk-k').checked;
+            const showPH = document.getElementById('chk-ph').checked;
+            const showM  = document.getElementById('chk-m').checked;
+
+            const drawSeries = (getter, color) => {
+                ctx.strokeStyle = color;
+                ctx.fillStyle = color;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+
+                historyLog.forEach((pt, idx) => {
+                    const x = historyLog.length === 1
+                        ? padL + plotW / 2
+                        : padL + (idx / (MAX_HISTORY - 1)) * plotW;
+                    const clamped = Math.min(250, Math.max(0, getter(pt)));
+                    const y = padT + plotH - (clamped / 250) * plotH;
+
+                    if (idx === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                });
+                ctx.stroke();
+
+                historyLog.forEach((pt, idx) => {
+                    const x = historyLog.length === 1
+                        ? padL + plotW / 2
+                        : padL + (idx / (MAX_HISTORY - 1)) * plotW;
+                    const clamped = Math.min(250, Math.max(0, getter(pt)));
+                    const y = padT + plotH - (clamped / 250) * plotH;
+                    ctx.fillRect(x - 2, y - 2, 4, 4);
+                });
+            };
+
+            if (showN)  drawSeries(pt => pt.n, '#00FF00');
+            if (showP)  drawSeries(pt => pt.p, '#00FFFF');
+            if (showK)  drawSeries(pt => pt.k, '#FFB000');
+            if (showPH) drawSeries(pt => pt.ph * 15, '#FF44FF');
+            if (showM)  drawSeries(pt => pt.m, '#3399FF');
+
+            ctx.fillStyle = '#00AA00';
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'top';
+            ctx.fillText(historyLog[0].time, padL, padT + plotH + 4);
+            if (historyLog.length > 1) {
+                ctx.textAlign = 'right';
+                ctx.fillText(historyLog[historyLog.length - 1].time, w - padR, padT + plotH + 4);
+            }
+        }
+
+        function toggleConnection() {
+            isConnected = !isConnected;
+            const badge = document.getElementById('connection-badge');
+            const led = document.getElementById('status-led');
+            const statusText = document.getElementById('status-text');
+            const btnLabel = document.getElementById('btn-connect-label');
+            const consoleEl = document.getElementById('serial-console');
+
+            if (isConnected) {
+                badge.className = 'px-2 py-0.5 bg-[#001100] text-[#00FF00] border border-[#808080] flex items-center gap-1.5';
+                led.className = 'inline-block w-2 h-2 bg-[#00FF00]';
+                statusText.textContent = 'COM3: CONNECTED';
+                btnLabel.textContent = 'DISCONNECT UNO';
+                consoleEl.innerHTML += `<div class="text-[#00FF00]">&gt; [COM3] Serial port opened @ 9600 baud.</div>`;
+                document.getElementById('footer-status').textContent = 'COM3 connected. Ready for 5-probe Modbus RTU polling.';
+            } else {
+                if (isDemoMode) toggleDemoMode();
+                badge.className = 'px-2 py-0.5 bg-[#220000] text-[#FF4444] border border-[#808080] flex items-center gap-1.5';
+                led.className = 'inline-block w-2 h-2 bg-[#FF4444] blink-90s';
+                statusText.textContent = 'COM3: OFFLINE';
+                btnLabel.textContent = 'CONNECT UNO';
+                consoleEl.innerHTML += `<div class="text-[#FF5555]">&gt; [COM3] Serial port closed by user.</div>`;
+                document.getElementById('footer-status').textContent = 'COM3 offline. Click CONNECT UNO to resume telemetry.';
+            }
+            consoleEl.scrollTop = consoleEl.scrollHeight;
+        }
+
+        function toggleDemoMode() {
+            if (!isConnected && !isDemoMode) {
+                showRetroToast('Cannot start Demo Simulation while COM3 is disconnected! Click "CONNECT UNO" first.');
+                return;
+            }
+            isDemoMode = !isDemoMode;
+            const btn = document.getElementById('btn-demo-mode');
+            const dot = document.getElementById('demo-btn-dot');
+            const label = document.getElementById('btn-demo-label');
+            const badge = document.getElementById('demo-mode-badge');
+            const badgeLed = document.getElementById('demo-led');
+            const badgeText = document.getElementById('demo-badge-text');
+            const workbenchTitle = document.getElementById('workbench-title');
+            const footerStatus = document.getElementById('footer-status');
+            const consoleEl = document.getElementById('serial-console');
+
+            if (isDemoMode) {
+                demoAnchorSoil = { ...currentSoil };
+                btn.classList.add('active');
+                btn.style.backgroundColor = '#D4C8A8';
+                dot.style.backgroundColor = '#FFB000';
+                label.textContent = 'DEMO MODE: ON';
+                badge.className = 'px-2 py-0.5 bg-[#221400] text-[#FFB000] border border-[#808080] flex items-center gap-1.5 font-bold';
+                badgeLed.className = 'inline-block w-2 h-2 bg-[#FFB000] blink-90s';
+                badgeText.textContent = '[DEMO SIMULATION ACTIVE]';
+                workbenchTitle.textContent = '5-PROBE SOIL SAMPLE TEST BENCH (DEMO SIMULATION ACTIVE — TURN DEMO OFF FOR MANUAL SLIDERS)';
+                footerStatus.textContent = 'DEMO MODE: Automated NPK, pH & Moisture simulation running.';
+                consoleEl.innerHTML += `<div class="text-[#FFB000]">&gt; [DEMO] DEMO SIMULATION ENABLED. Automated 5-probe polling active.</div>`;
+            } else {
+                btn.classList.remove('active');
+                btn.style.backgroundColor = '#C0C0C0';
+                dot.style.backgroundColor = '#808080';
+                label.textContent = 'DEMO MODE: OFF';
+                badge.className = 'px-2 py-0.5 bg-[#1A1A1A] text-[#00FF00] border border-[#808080] flex items-center gap-1.5 font-bold';
+                badgeLed.className = 'inline-block w-2 h-2 bg-[#00FF00]';
+                badgeText.textContent = '[MANUAL / HARDWARE MODE]';
+                workbenchTitle.textContent = '5-PROBE SOIL SAMPLE TEST BENCH (MANUAL / HARDWARE MODE ACTIVE — ADJUST SLIDERS OR VALUES)';
+                footerStatus.textContent = 'HARDWARE / MANUAL MODE: Simulation frozen. Adjust N, P, K, pH, Moisture sliders.';
+                consoleEl.innerHTML += `<div class="text-white">&gt; [SYSTEM] DEMO SIMULATION STOPPED. Switched to Manual / Hardware Mode.</div>`;
+            }
+            consoleEl.scrollTop = consoleEl.scrollHeight;
+            updateUI();
+        }
+
+        function sampleNow() {
+            if (!isConnected) {
+                showRetroToast('Cannot poll sensor: COM3 is disconnected! Click "CONNECT UNO" first.');
+                return;
+            }
+            simulateSensorStep(false);
+            document.getElementById('footer-status').textContent = 'Manual 5-probe Modbus RTU poll triggered.';
+        }
+
+        function manualSliderUpdate(source = 'slider') {
+            if (isDemoMode) {
+                toggleDemoMode();
+            }
+
+            const prefix = source === 'num' ? 'num-' : 'slider-';
+            let n  = parseInt(document.getElementById(`${prefix}n`).value || '0', 10);
+            let p  = parseInt(document.getElementById(`${prefix}p`).value || '0', 10);
+            let k  = parseInt(document.getElementById(`${prefix}k`).value || '0', 10);
+            let ph = parseFloat(document.getElementById(`${prefix}ph`).value || '6.5');
+            let m  = parseInt(document.getElementById(`${prefix}m`).value || '0', 10);
+
+            n  = Math.min(250, Math.max(0, isNaN(n) ? 0 : n));
+            p  = Math.min(250, Math.max(0, isNaN(p) ? 0 : p));
+            k  = Math.min(250, Math.max(0, isNaN(k) ? 0 : k));
+            ph = Math.round(Math.min(10.0, Math.max(3.0, isNaN(ph) ? 6.5 : ph)) * 10) / 10;
+            m  = Math.min(100, Math.max(0, isNaN(m) ? 0 : m));
+
+            syncManualInputs(n, p, k, ph, m);
+            currentSoil = { n, p, k, ph, m };
+
+            const now = new Date();
+            const timestamp = now.toTimeString().split(' ')[0];
+            historyLog.push({ time: timestamp, n, p, k, ph, m });
+            if (historyLog.length > MAX_HISTORY) historyLog.shift();
+
+            const cropKey = document.getElementById('crop-select').value || 'rice';
+            csvFullLog.push({
+                iso: now.toISOString(),
+                time: timestamp,
+                crop: CROP_PRESETS[cropKey] ? CROP_PRESETS[cropKey].name : 'Rice / Paddy',
+                n, p, k, ph: ph.toFixed(1), m
+            });
+
+            document.getElementById('last-poll-time').textContent = `LAST RX: ${timestamp}`;
+            updateUI();
+        }
+
+        function changeCropPreset(isManualSelect = false) {
+            if (isManualSelect) {
+                autoFollowBestCrop = false;
+                const btn = document.getElementById('btn-auto-lock');
+                btn.classList.remove('active');
+                btn.textContent = 'AUTO: OFF';
+            }
+            updateUI();
+            const cropKey = document.getElementById('crop-select').value;
+            document.getElementById('footer-status').textContent = `Target crop profile loaded: ${CROP_PRESETS[cropKey].name}`;
+        }
+
+        function toggleCRTColor() {
+            isAmberCRT = !isAmberCRT;
+            document.querySelectorAll('.crt-screen').forEach(el => {
+                el.classList.toggle('amber-mode', isAmberCRT);
+            });
+        }
+
+        function clearConsole() {
+            document.getElementById('serial-console').innerHTML = '<div>&gt; Serial buffer cleared.</div>';
+        }
+
+        function clearHistory() {
+            historyLog = [];
+            document.getElementById('sample-count').textContent = '0';
+            drawChart();
+        }
+
+        function sendSerialCommand() {
+            const input = document.getElementById('serial-input');
+            const cmd = input.value.trim();
+            if (!cmd) return;
+
+            const consoleEl = document.getElementById('serial-console');
+            consoleEl.innerHTML += `<div class="text-white">&gt; USER TX: ${cmd}</div>`;
+
+            if (!isConnected) {
+                consoleEl.innerHTML += `<div class="text-[#FF5555]">  ERR: COM3 NOT CONNECTED.</div>`;
+            } else {
+                const upper = cmd.toUpperCase();
+                if (upper === 'READ' || upper === 'POLL') {
+                    simulateSensorStep(false);
+                } else if (upper === 'CALIBRATE' || upper === 'CAL') {
+                    consoleEl.innerHTML += `<div>  [UNO] Zero-point NPK, pH (7.00 buffer) &amp; Moisture calibration complete.</div>`;
+                } else if (upper === 'HELP') {
+                    consoleEl.innerHTML += `<div>  [UNO] Available commands: READ, CALIBRATE, STATUS, VER</div>`;
+                } else if (upper === 'VER') {
+                    consoleEl.innerHTML += `<div>  [UNO] AgriTronics 5-Probe Firmware v2.95 (1995-11-23)</div>`;
+                } else if (upper === 'STATUS') {
+                    consoleEl.innerHTML += `<div>  [UNO] N:${currentSoil.n} P:${currentSoil.p} K:${currentSoil.k} | pH:${currentSoil.ph.toFixed(1)} | H2O:${currentSoil.m}%</div>`;
+                } else {
+                    consoleEl.innerHTML += `<div>  [UNO] ACK: "${cmd}" received (${cmd.length} bytes).</div>`;
+                }
+            }
+
+            input.value = '';
+            consoleEl.scrollTop = consoleEl.scrollHeight;
+        }
+
+        function exportCSV() {
+            if (csvFullLog.length === 0) {
+                showRetroToast('No telemetry records available to export yet!');
+                return;
+            }
+
+            let csvContent = "Timestamp_ISO,Local_Time,Target_Crop,Nitrogen_mg_kg,Phosphorus_mg_kg,Potassium_mg_kg,Soil_pH,Soil_Moisture_Pct\n";
+            csvFullLog.forEach(row => {
+                csvContent += `${row.iso},${row.time},"${row.crop}",${row.n},${row.p},${row.k},${row.ph},${row.m}\n`;
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            const dateStr = new Date().toISOString().slice(0, 10);
+            link.setAttribute('href', url);
+            link.setAttribute('download', `ARDUINO_SOIL_5PROBE_${dateStr}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+
+            document.getElementById('footer-status').textContent = `Saved ${csvFullLog.length} records to A:\\ARDUINO_SOIL_5PROBE_${dateStr}.csv`;
+            showRetroToast(`Floppy Write Complete!<br><br>Exported <strong>${csvFullLog.length}</strong> 5-probe soil telemetry readings (NPK + pH + Moisture) to <code>ARDUINO_SOIL_5PROBE_${dateStr}.csv</code>.`);
+        }
+
+        function switchTab(tabName) {
+            const dashView = document.getElementById('view-dashboard');
+            const wireView = document.getElementById('view-wiring');
+            const tabDash = document.getElementById('tab-dashboard');
+            const tabWire = document.getElementById('tab-wiring');
+
+            if (tabName === 'dashboard') {
+                dashView.classList.remove('hidden');
+                wireView.classList.add('hidden');
+                tabDash.classList.add('active');
+                tabWire.classList.remove('active');
+                drawChart();
+            } else {
+                dashView.classList.add('hidden');
+                wireView.classList.remove('hidden');
+                tabDash.classList.remove('active');
+                tabWire.classList.add('active');
+            }
+        }
+
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('win95-clock').textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+
+        function showRetroToast(htmlMessage, title = 'Agri-Tronics 95 System Notice') {
+            document.getElementById('modal-title').textContent = title;
+            document.getElementById('modal-body').innerHTML = htmlMessage;
+            const modal = document.getElementById('win95-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function openAboutModal() {
+            showRetroToast(
+                `<strong>ARDUINO UNO 5-IN-1 SOIL TELEMETRY SYSTEM v2.95</strong><br><br>
+                Designed for RS-485 Modbus RTU 7-in-1 Soil Probes connected via MAX485 transceiver.<br><br>
+                • Baud Rate: 9600 bps (8-N-1)<br>
+                • Registers: 0x0006 (pH), 0x0012 (Moisture), 0x001E..20 (N, P, K)<br>
+                • Copyright (C) 1995 Agri-Tronics Industrial Computing`,
+                'About Soil Telemetry v2.95'
+            );
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('win95-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+    </script>
+</body>
+</html>
